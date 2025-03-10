@@ -1,7 +1,7 @@
 import { Model } from 'objection';
 import Order from './Order';
 
-class Product extends Model {
+export class Product extends Model {
   static tableName = 'products';
 
   id!: number;

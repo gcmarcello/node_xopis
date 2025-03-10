@@ -15,7 +15,7 @@ export enum OrderStatus {
   FraudCanceled = 'fraud_canceled',
 }
 
-class Order extends Model {
+export class Order extends Model {
   static tableName = 'orders';
 
   id!: number;
@@ -25,6 +25,7 @@ class Order extends Model {
   total_shipping!: number;
   total_discount!: number;
   status!: OrderStatus;
+  items?: OrderItem[];
   created_at?: Date;
   updated_at?: Date;
 
