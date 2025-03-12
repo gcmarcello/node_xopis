@@ -2,19 +2,36 @@ import { Model } from 'objection';
 import Order from './Order';
 import Product from './Product';
 
+export type OrderItemAttributes = {
+  id?: number;
+  order_id: number;
+  product_id: number;
+  quantity: number;
+  tax: number;
+  shipping: number;
+  discount: number;
+  paid: number;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
 class OrderItem extends Model {
   static tableName = 'orders_items';
 
-  id!: number;
+  id?: number;
   order_id!: number;
   product_id!: number;
   quantity!: number;
-  tax!: number;
-  shipping!: number;
-  discount!: number;
+  tax: number = 0;
+  discount: number = 0;
   paid!: number;
   created_at?: Date;
   updated_at?: Date;
+
+  constructor(data?: Partial<OrderItemAttributes>) {
+    super();
+    Object.assign(this, data || {});
+  }
 
   static get jsonSchema() {
     return {
