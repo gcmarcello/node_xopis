@@ -26,7 +26,7 @@ export default async (
         const missingProduct = orderItems.filter(item => !products.find(product => product.id === item.product_id));
 
         if (missingProduct.length) {
-            throw new NotFoundError({ message: 'Product not found' + missingProduct.map(item => item.product_id).join(',') });
+            throw new NotFoundError({ message: 'Product not found' + missingProduct.map(item => item.product_id).join(', ') });
         }
 
         const productPriceMap = new Map(products.map(product => [product.id, product.price]));
