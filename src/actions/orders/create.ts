@@ -22,7 +22,7 @@ export default async (
 ) => {
     try {
         const orderItems = items ?? []
-        const products = orderItems ? await Product.query().findByIds(orderItems.map(item => item.product_id)) : [];
+        const products = await Product.query().findByIds(orderItems.map(item => item.product_id));
         const missingProduct = orderItems.filter(item => !products.find(product => product.id === item.product_id));
 
         if (missingProduct.length) {
@@ -52,7 +52,6 @@ export default async (
             total_tax += itemTax;
         }
 
-
         const order = await Order.transaction(async (trx) => {
             const order = await Order.query(trx).insertGraph({
                 customer_id,
@@ -70,8 +69,6 @@ export default async (
                 const itemShipping = 0;
                 const itemTotal = (price * item.quantity)
                 const itemPaid = Math.max(itemTotal - itemDiscount, 0)
-
-
 
                 return {
                     order_id: order.id,
@@ -101,7 +98,6 @@ export default async (
         if (error instanceof NotFoundError) {
             return reply.code(400).send({ message: error.message });
         }
-        console.log(error)
         return reply.send(error);
     };
 }
