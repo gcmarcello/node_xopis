@@ -30,7 +30,7 @@ export default async (
             total_shipping,
             total_tax,
             status: OrderStatus.PaymentPending
-        }, orderItems, productPriceMap);
+        }, productPriceMap, orderItems);
 
         return reply.code(201).send(order);
     } catch (error) {

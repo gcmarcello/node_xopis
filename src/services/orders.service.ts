@@ -28,7 +28,11 @@ export function calculateOrderTotals(orderItems: OrderItemAttributes[], productP
     return { total_paid, total_discount, total_shipping, total_tax };
 }
 
-export async function createOrder({ customer_id, total_discount, total_paid, total_shipping, total_tax, status }: OrderAttributes, orderItems: OrderItemAttributes[], productPriceMap: Map<number, number>) {
+export async function createOrder(
+    { customer_id, total_discount, total_paid, total_shipping, total_tax, status }: OrderAttributes,
+    productPriceMap: Map<number, number>,
+    orderItems: OrderItemAttributes[],
+) {
     return await Order.transaction(async (trx) => {
         const order = await Order.query(trx).insert({
             customer_id,
