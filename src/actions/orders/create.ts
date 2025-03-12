@@ -7,7 +7,9 @@ import { OrderItem } from "../../models";
 
 type Request = FastifyRequest<{
     Body: {
+        id?: number;
         customer_id: number;
+        status?: OrderStatus;
         items: {
             product_id: number;
             quantity: number;
@@ -17,7 +19,7 @@ type Request = FastifyRequest<{
 }>;
 
 export default async (
-    { body: { customer_id, items } }: Request,
+    { body: { customer_id, items, id, status } }: Request,
     reply: FastifyReply
 ) => {
     try {
@@ -53,14 +55,19 @@ export default async (
         }
 
         const order = await Order.transaction(async (trx) => {
-            const order = await Order.query(trx).insertGraph({
+            const order = await Order.query(trx).upsertGraph({
+                id,
                 customer_id,
                 total_paid,
                 total_discount,
                 total_shipping,
                 total_tax,
-                status: OrderStatus.PaymentPending
-            });
+                status: status || OrderStatus.PaymentPending,
+            }, { insertMissing: true });
+
+            if (id) {
+                await OrderItem.query(trx).delete().where('order_id', order.id);
+            }
 
             const orderItemsData = orderItems.map(item => {
                 const price = productPriceMap.get(item.product_id) || 0;
