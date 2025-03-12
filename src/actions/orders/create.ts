@@ -22,9 +22,10 @@ export default async (
     try {
         const orderItems = items ?? []
         const products = orderItems ? await Product.query().findByIds(orderItems.map(item => item.product_id)) : [];
+        const missingProduct = orderItems.filter(item => !products.find(product => product.id === item.product_id));
 
-        if (products.length !== orderItems.length) {
-            throw new NotFoundError({message: 'Product not found'});
+        if (missingProduct.length) {
+            throw new NotFoundError({ message: 'Product not found' + missingProduct.map(item => item.product_id).join(',') });
         }
 
         const productPriceMap = new Map(products.map(product => [product.id, product.price]));
