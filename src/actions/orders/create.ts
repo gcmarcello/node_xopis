@@ -1,20 +1,17 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { Order, OrderStatus } from "../../models/Order";
-import { Product } from "../../models/Product";
+import { OrderStatus } from "../../models/Order";
 import { InvalidAmountError } from "../../errors/invalidAmount";
 import { NotFoundError } from "objection";
-import { OrderItem } from "../../models";
+import { findProductsFromOrderItems } from "../../services/products.service";
+import { calculateOrderTotals, createOrder } from "../../services/orders.service";
+import { type OrderItemAttributes } from "../../models/OrderItem";
 
 type Request = FastifyRequest<{
     Body: {
         id?: number;
         customer_id: number;
-        status?: OrderStatus;
-        items: {
-            product_id: number;
-            quantity: number;
-            discount?: number;
-        }[];
+        items: OrderItemAttributes[];
+        status: OrderStatus;
     }
 }>;
 
@@ -24,78 +21,18 @@ export default async (
 ) => {
     try {
         const orderItems = items ?? []
-        const products = await Product.query().findByIds(orderItems.map(item => item.product_id));
-        const missingProduct = orderItems.filter(item => !products.find(product => product.id === item.product_id));
-
-        if (missingProduct.length) {
-            throw new NotFoundError({ message: 'Product not found' + missingProduct.map(item => item.product_id).join(',') });
-        }
-
+        const products = await findProductsFromOrderItems(orderItems)
         const productPriceMap = new Map(products.map(product => [product.id, product.price]));
+        const { total_paid, total_discount, total_shipping, total_tax } = calculateOrderTotals(orderItems, productPriceMap);
 
-        let total_paid = 0;
-        let total_discount = 0;
-        let total_shipping = 0;
-        let total_tax = 0;
-
-        for (const item of orderItems) {
-            const price = productPriceMap.get(item.product_id) || 0;
-            const itemDiscount = item.discount || 0;
-            const itemTax = 0;
-            const itemShipping = 0;
-            const itemTotal = (price * item.quantity)
-
-            if (item.discount && item.discount < 0) throw new InvalidAmountError(`Invalid amount for discount on product ${item.product_id}`)
-            if (item.quantity < 0) throw new InvalidAmountError(`Invalid amount for quantity on product ${item.product_id}`)
-
-            total_paid += Math.max((itemTotal + itemTax + itemShipping) - itemDiscount, 0);
-            total_discount += itemDiscount;
-            total_shipping += itemShipping;
-            total_tax += itemTax;
-        }
-
-        const order = await Order.transaction(async (trx) => {
-            const order = await Order.query(trx).upsertGraph({
-                id,
-                customer_id,
-                total_paid,
-                total_discount,
-                total_shipping,
-                total_tax,
-                status: status || OrderStatus.PaymentPending,
-            }, { insertMissing: true });
-
-            if (id) {
-                await OrderItem.query(trx).delete().where('order_id', order.id);
-            }
-
-            const orderItemsData = orderItems.map(item => {
-                const price = productPriceMap.get(item.product_id) || 0;
-                const itemDiscount = item.discount || 0;
-                const itemTax = 0;
-                const itemShipping = 0;
-                const itemTotal = (price * item.quantity)
-                const itemPaid = Math.max(itemTotal - itemDiscount, 0)
-
-                return {
-                    order_id: order.id,
-                    product_id: item.product_id,
-                    quantity: item.quantity,
-                    discount: itemDiscount,
-                    paid: itemPaid,
-                    tax: itemTax,
-                    shipping: itemShipping,
-                };
-            });
-
-            const items = orderItemsData.length ? await OrderItem.knex()
-                .batchInsert("orders_items", orderItemsData, 100)
-                .transacting(trx)
-                // as any needed due to a bug in objection types
-                .returning(['discount', 'id', 'order_id', 'paid', 'product_id', 'quantity', 'shipping', 'tax'] as any[]) : [];
-
-            return { ...order, items }
-        })
+        const order = await createOrder({
+            customer_id,
+            total_discount,
+            total_paid,
+            total_shipping,
+            total_tax,
+            status
+        }, productPriceMap, orderItems);
 
         return reply.code(201).send(order);
     } catch (error) {

@@ -4,6 +4,18 @@ import OrderItem from './OrderItem';
 import Product from './Product';
 import Payment from './Payment';
 
+export interface OrderAttributes {
+  id?: number;
+  customer_id: number;
+  total_paid: number;
+  total_tax: number;
+  total_shipping: number;
+  total_discount: number;
+  status: OrderStatus;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
 export enum OrderStatus {
   PaymentPending = 'payment_pending',
   FraudReview = 'fraud_review',
@@ -28,6 +40,11 @@ export class Order extends Model {
   items?: OrderItem[];
   created_at?: Date;
   updated_at?: Date;
+
+  constructor(data?: Partial<OrderAttributes>) {
+      super();
+      Object.assign(this, data || {});
+    }
 
   static get jsonSchema() {
     return {
