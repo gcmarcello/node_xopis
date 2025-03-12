@@ -17,6 +17,7 @@ export function calculateOrderTotals(orderItems: OrderItemAttributes[], productP
         const itemTotal = (price * item.quantity)
 
         if (item.discount && item.discount < 0) throw new InvalidAmountError(`Invalid amount for discount on product ${item.product_id}`)
+        if (item.discount && item.discount > itemTotal) throw new InvalidAmountError(`Discount amount cannot be greater than total cost for product ${item.product_id}`)
         if (item.quantity < 0) throw new InvalidAmountError(`Invalid amount for quantity on product ${item.product_id}`)
 
         total_paid += Math.max((itemTotal + itemTax + itemShipping) - itemDiscount, 0);
