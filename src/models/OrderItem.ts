@@ -4,13 +4,13 @@ import Product from './Product';
 
 export type OrderItemAttributes = {
   id?: number;
-  order_id: number;
+  order_id?: number;
   product_id: number;
   quantity: number;
-  tax: number;
-  shipping: number;
-  discount: number;
-  paid: number;
+  tax?: number;
+  shipping?: number;
+  discount?: number;
+  paid?: number;
   created_at?: Date;
   updated_at?: Date;
 }

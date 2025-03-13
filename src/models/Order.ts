@@ -11,7 +11,7 @@ export interface OrderAttributes {
   total_tax: number;
   total_shipping: number;
   total_discount: number;
-  status: OrderStatus;
+  status?: OrderStatus;
   created_at?: Date;
   updated_at?: Date;
 }

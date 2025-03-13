@@ -6,14 +6,10 @@ import { findProductsFromOrderItems } from "../../services/products.service";
 import { calculateOrderTotals, upsertOrder } from "../../services/orders.service";
 import { type OrderItemAttributes } from "../../models/OrderItem";
 import { NonPendingOrderItemUpdateError } from "../../errors/nonPendingOrderItemUpdateError.ts";
+import { UpsertOrderSchema } from "src/schema/orders";
 
 type Request = FastifyRequest<{
-    Body: {
-        id?: number;
-        customer_id: number;
-        items: OrderItemAttributes[];
-        status: OrderStatus;
-    }
+    Body: UpsertOrderSchema
 }>;
 
 export default async (
