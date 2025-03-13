@@ -1,6 +1,7 @@
+import { SalesReportSchema,  } from "src/schema/reports";
 import { Order, OrderItem, Product } from "../models";
 
-export async function fetchItemsByDayAndProduct({ start_date, end_date, product_id }: { start_date: Date, end_date: Date, product_id?: number }) {
+export async function fetchItemsByDayAndProduct({ start_date, end_date, product_id }: SalesReportSchema) {
     const isoStartDate = start_date.toISOString()
     const isoEndDate = end_date.toISOString()
 
@@ -37,3 +38,52 @@ export async function reportSalesByDayAndProduct(itemsSold: OrderItem[]) {
 
     return parsedItems
 }
+
+export async function reportTopProducts(
+    itemsSold: OrderItem[],
+    breakdown = false
+  ) {
+    if (breakdown) {
+      const dateMap = new Map<string, Map<number, number>>();
+  
+      for (const item of itemsSold) {
+        const date = item.created_at!.split('T')[0];
+  
+        if (!dateMap.has(date)) {
+          dateMap.set(date, new Map<number, number>());
+        }
+  
+        const productMap = dateMap.get(date)!;
+        const currentCount = productMap.get(item.product_id) ?? 0;
+        productMap.set(item.product_id, currentCount + item.quantity);
+      }
+  
+      const breakdownResults = [];
+  
+      for (const [date, productMap] of dateMap.entries()) {
+        const sortedItems = Array.from(productMap.entries())
+          .sort((a, b) => b[1] - a[1])
+          .map(([product_id, total_purchases]) => ({
+            product_id,
+            date,
+            total_purchases,
+          }));
+  
+        breakdownResults.push(...sortedItems);
+      }
+  
+      return breakdownResults;
+    } else {
+      
+      const productMap = new Map<number, number>();
+  
+      for (const item of itemsSold) {
+        const currentCount = productMap.get(item.product_id) ?? 0;
+        productMap.set(item.product_id, currentCount + item.quantity);
+      }
+  
+      return Array.from(productMap.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([product_id, total_purchases]) => ({ product_id, total_purchases }));
+    }
+  }

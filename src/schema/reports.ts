@@ -5,6 +5,8 @@ export const datesSchema = z.object({
     end_date: z.coerce.date(),
 })
 
+export type DatesSchema = z.infer<typeof datesSchema>
+
 export const salesReportSchema = z.object({
     product_id: z.coerce.number().optional(),
 }).merge(datesSchema)

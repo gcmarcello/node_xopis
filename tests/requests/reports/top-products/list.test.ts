@@ -1,11 +1,11 @@
 import 'tests/setup';
-import { Order, Product } from "src/models";
+import { Order, OrderStatus, Product } from "src/models";
 import server from "src/server";
 import { products } from 'tests/seeds/raw/products';
 import { seedRandomOrders } from 'tests/seeds/order';
-import { error } from 'console';
+import { expectedTopProducts, expectedTopProductsWithBreakdown, ordersForTopProductsTest } from 'tests/seeds/raw/orders';
 
-describe('SALES REPORT action', () => {
+describe('TOP PRODUCTS REPORT action', () => {
     beforeAll(async () =>
         await Product
             .knex().batchInsert('products', products)
@@ -13,29 +13,9 @@ describe('SALES REPORT action', () => {
 
     describe('when the input is valid', () => {
         it('returns a list of sales', async () => {
-            const ordersData = seedRandomOrders(10)
-            await Order.query().insertGraphAndFetch(ordersData)
-
+            await Order.query().insertGraphAndFetch(ordersForTopProductsTest)
             const start_date = new Date('2021-09-01').toISOString();
             const end_date = new Date('2025-09-03').toISOString();
-
-            const filteredOrders = ordersData.filter(order =>
-                order.created_at! >= start_date
-                && order.created_at! <= end_date
-                && order.status === 'approved')
-
-
-
-            const expectedItems = filteredOrders.flatMap(order => order.items).map(item => {
-                const product = products.find((product, index) => index + 1 === item?.product_id)
-                if (!product) return null
-                return {
-                    product_id: item?.product_id,
-                    quantity: item?.quantity,
-                    total_sold: (item?.quantity || 0) * product.price - (item?.discount || 0)
-                }
-            })
-
             const request = await makeRequest({
                 start_date,
                 end_date,
@@ -45,46 +25,28 @@ describe('SALES REPORT action', () => {
 
             const responseData = request.json();
 
-            expect(responseData).toStrictEqual(expectedItems);
+            expect(responseData).toStrictEqual(expectedTopProducts);
+
         });
     });
 
-    describe('when the input is valid with product_id', () => {
+    describe('when the input is valid with breakdown', () => {
         it('returns a list of sales', async () => {
-            const ordersData = seedRandomOrders(10)
-            await Order.query().insertGraphAndFetch(ordersData)
-
+            await Order.query().insertGraphAndFetch(ordersForTopProductsTest)
             const start_date = new Date('2021-09-01').toISOString();
             const end_date = new Date('2025-09-03').toISOString();
-
-            const filteredOrders = ordersData.filter(order =>
-                order.created_at! >= start_date
-                && order.created_at! <= end_date
-                && order.status === 'approved')
-
-
-
-            const expectedItems = filteredOrders.flatMap(order => order.items).filter(item => item?.product_id === 1).map(item => {
-                const product = products.find((product, index) => index + 1 === item?.product_id)
-                if (!product) return null
-                return {
-                    product_id: item?.product_id,
-                    quantity: item?.quantity,
-                    total_sold: (item?.quantity || 0) * product.price - (item?.discount || 0)
-                }
-            })
-
             const request = await makeRequest({
                 start_date,
                 end_date,
-                product_id: 1
+                breakdown: true
             })
 
             expect(request.statusCode).toBe(200);
 
             const responseData = request.json();
 
-            expect(responseData).toStrictEqual(expectedItems);
+            expect(responseData).toStrictEqual(expectedTopProductsWithBreakdown);
+
         });
     });
 
@@ -142,7 +104,7 @@ describe('SALES REPORT action', () => {
     const makeRequest = async (query: any) =>
         server.inject({
             method: 'GET',
-            url: '/reports/sales',
+            url: '/reports/top-products',
             query
         });
 

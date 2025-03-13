@@ -1,5 +1,5 @@
 import { OrderStatus, Product } from "src/models";
-import { products } from "./products";
+import { products } from "./raw/products";
 import { OrderAttributes } from "src/models/Order";
 import { faker } from '@faker-js/faker'
 import { OrderItemAttributes } from "src/models/OrderItem";
