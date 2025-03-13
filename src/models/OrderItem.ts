@@ -1,20 +1,39 @@
 import { Model } from 'objection';
-import Order from './Order';
+import Order, { OrderStatus } from './Order';
 import Product from './Product';
 
-class OrderItem extends Model {
-  static tableName = 'order_items';
+export type OrderItemAttributes = {
+  id?: number;
+  status: OrderStatus;
+  order_id: number;
+  product_id: number;
+  quantity: number;
+  tax: number;
+  shipping: number;
+  discount: number;
+  paid: number;
+  created_at?: Date;
+  updated_at?: Date;
+}
 
-  id!: number;
+class OrderItem extends Model {
+  static tableName = 'orders_items';
+
+  id?: number;
+  status!: OrderStatus;
   order_id!: number;
   product_id!: number;
   quantity!: number;
-  tax!: number;
-  shipping!: number;
-  discount!: number;
+  tax: number = 0;
+  discount: number = 0;
   paid!: number;
   created_at?: Date;
   updated_at?: Date;
+
+  constructor(data?: Partial<OrderItemAttributes>) {
+    super();
+    Object.assign(this, data || {});
+  }
 
   static get jsonSchema() {
     return {
@@ -41,7 +60,7 @@ class OrderItem extends Model {
         relation: Model.BelongsToOneRelation,
         modelClass: Order,
         join: {
-          from: 'order_items.order_id',
+          from: 'orders_items.order_id',
           to: 'orders.id',
         }
       },
@@ -50,7 +69,7 @@ class OrderItem extends Model {
         modelClass: Product,
         join: {
 
-          from: 'order_items.product_id',
+          from: 'orders_items.product_id',
           to: 'products.id',
         }
       }

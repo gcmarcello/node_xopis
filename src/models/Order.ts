@@ -4,6 +4,18 @@ import OrderItem from './OrderItem';
 import Product from './Product';
 import Payment from './Payment';
 
+export interface OrderAttributes {
+  id?: number;
+  customer_id: number;
+  total_paid: number;
+  total_tax: number;
+  total_shipping: number;
+  total_discount: number;
+  status: OrderStatus;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
 export enum OrderStatus {
   PaymentPending = 'payment_pending',
   FraudReview = 'fraud_review',
@@ -15,7 +27,7 @@ export enum OrderStatus {
   FraudCanceled = 'fraud_canceled',
 }
 
-class Order extends Model {
+export class Order extends Model {
   static tableName = 'orders';
 
   id!: number;
@@ -25,8 +37,14 @@ class Order extends Model {
   total_shipping!: number;
   total_discount!: number;
   status!: OrderStatus;
+  items?: OrderItem[];
   created_at?: Date;
   updated_at?: Date;
+
+  constructor(data?: Partial<OrderAttributes>) {
+      super();
+      Object.assign(this, data || {});
+    }
 
   static get jsonSchema() {
     return {
@@ -61,7 +79,7 @@ class Order extends Model {
         modelClass: OrderItem,
         join: {
           from: 'orders.id',
-          to: 'order_items.order_id',
+          to: 'orders_items.order_id',
         }
       },
       products: {
@@ -70,8 +88,8 @@ class Order extends Model {
         join: {
           from: 'orders.id',
           through: {
-            from: 'order_items.order_id',
-            to: 'order_items.product_id',
+            from: 'orders_items.order_id',
+            to: 'orders_items.product_id',
           },
           to: 'products.id',
         }
