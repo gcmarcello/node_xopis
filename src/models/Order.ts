@@ -1,6 +1,6 @@
 import { Model } from 'objection';
 import User from './User';
-import OrderItem from './OrderItem';
+import OrderItem, { OrderItemAttributes } from './OrderItem';
 import Product from './Product';
 import Payment from './Payment';
 
@@ -10,6 +10,7 @@ export interface OrderAttributes {
   total_paid: number;
   total_tax: number;
   total_shipping: number;
+  items?: OrderItemAttributes[];
   total_discount: number;
   status?: OrderStatus;
   created_at?: string;
