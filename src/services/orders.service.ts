@@ -1,7 +1,8 @@
+import { NonPendingOrderItemUpdateError } from "../errors/nonPendingOrderItemUpdateError.ts";
 import { InvalidAmountError } from "../errors/invalidAmount";
 import Order, { OrderAttributes, OrderStatus } from "../models/Order";
 import OrderItem, { OrderItemAttributes } from "../models/OrderItem";
-import { generateOrderItems } from "./orderItems.service";
+import { generateOrderItems, verifyIfItemsAreEqual } from "./orderItems.service";
 
 export function calculateOrderTotals(orderItems: OrderItemAttributes[], productPriceMap: Map<number, number>) {
     let total_paid = 0;
@@ -34,9 +35,10 @@ export async function upsertOrder(
     productPriceMap: Map<number, number>,
     orderItems: OrderItemAttributes[]
 ) {
+
     const returningRows = ['discount', 'id', 'order_id', 'paid', 'product_id', 'quantity', 'shipping', 'tax'] as any[]
     return await Order.transaction(async (trx) => {
-        const order = await Order.query(trx).upsertGraph(
+        const order = await Order.query(trx).upsertGraphAndFetch(
             {
                 id,
                 customer_id,
@@ -44,11 +46,15 @@ export async function upsertOrder(
                 total_discount,
                 total_shipping,
                 total_tax,
-                status: status ?? OrderStatus.PaymentPending
-            }
-        );
+                status: id ? status : OrderStatus.PaymentPending
+            })
 
         const newOrderItems = generateOrderItems(orderItems, order, productPriceMap);
+
+        if(order.status !== OrderStatus.PaymentPending) {
+            const areItemsEqual = await verifyIfItemsAreEqual(orderItems, order.id, trx);
+            if(!areItemsEqual) throw new NonPendingOrderItemUpdateError('Order items cannot be changed after order is processed');
+        }
 
         if (!order.id) {
             const items = newOrderItems.length

@@ -444,6 +444,37 @@ describe('CREATE action', () => {
         });
     })
 
+    describe('when updating items in a processed order', () => {
+        const input: Partial<Order> = {
+            "customer_id": 1,
+            "items": [
+                item1,
+                item2
+            ]
+        }
+        it('does not create a new order record', async () => {
+            await makeRequest(input);
+            const req = await makeRequest({...input, status: OrderStatus.Approved, id: 1});
+            console.log(req.json())
+            const newItem = new OrderItem({ product_id: 3, discount: 0, quantity: 1 });
+            await assertCountOrderItems({ ...input, id: 1, items: [item1, item2, newItem] }, { changedBy: 0 });
+        });
+
+        it('does not create any orderItem record', async () => {
+            await makeRequest(input);
+            await makeRequest({...input, status: OrderStatus.Approved, id: 1});
+            const newItem = new OrderItem({ product_id: 3, discount: 0, quantity: 1 });
+            await assertCountOrderItems({ ...input, id: 1, items: [item1, item2, newItem] }, { changedBy: 0 });
+        });
+
+        it('returns a bad request response', async () => {
+            await makeRequest(input);
+            const newItem = new OrderItem({ product_id: 3, discount: 0, quantity: 1 });
+            const response = await makeRequest({ ...input, status: OrderStatus.Approved, id: 1, items: [item1, item2, newItem] });
+            await assertBadRequest(response, /Order items cannot be changed after order is processed/);
+        });
+    })
+
     const makeRequest = async (input: Partial<Order>) =>
         server.inject({
             method: 'POST',

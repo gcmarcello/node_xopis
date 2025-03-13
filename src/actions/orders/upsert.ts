@@ -5,6 +5,7 @@ import { NotFoundError } from "objection";
 import { findProductsFromOrderItems } from "../../services/products.service";
 import { calculateOrderTotals, upsertOrder } from "../../services/orders.service";
 import { type OrderItemAttributes } from "../../models/OrderItem";
+import { NonPendingOrderItemUpdateError } from "../../errors/nonPendingOrderItemUpdateError.ts";
 
 type Request = FastifyRequest<{
     Body: {
@@ -39,6 +40,9 @@ export default async (
     } catch (error) {
         if (error instanceof InvalidAmountError) {
             return reply.code(400).send(error);
+        }
+        if (error instanceof NonPendingOrderItemUpdateError) {
+            return reply.code(400).send({ message: error.message });
         }
         if (error instanceof NotFoundError) {
             return reply.code(400).send({ message: error.message });
