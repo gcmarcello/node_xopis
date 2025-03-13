@@ -1,7 +1,7 @@
 import { FastifyError, FastifyReply, FastifyRequest } from "fastify";
 import { hasZodFastifySchemaValidationErrors, isResponseSerializationError } from "fastify-type-provider-zod";
 import Objection from "objection";
-import ApplicationError, { ErrorCodes } from "src/errors/_applicationError";
+import ApplicationError, { ErrorCodes } from "../errors/_applicationError";
 
 export const errorHandler = (
     error: FastifyError,

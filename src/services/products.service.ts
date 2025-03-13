@@ -1,4 +1,4 @@
-import { NotFoundError } from "src/errors/notFound";
+import { NotFoundError } from "../errors/notFound";
 import { Product } from "../models";
 import { type OrderItemAttributes } from "../models/OrderItem";
 

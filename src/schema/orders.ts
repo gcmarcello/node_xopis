@@ -1,6 +1,6 @@
 import z from "zod";
 import { upsertOrderItemSchema } from "./orderItems";
-import { OrderStatus } from "src/models";
+import { OrderStatus } from "../models";
 
 export const upsertOrderSchema = z.object({
     id: z.number().optional(),
