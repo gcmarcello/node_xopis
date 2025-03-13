@@ -51,9 +51,9 @@ export async function upsertOrder(
 
         const newOrderItems = generateOrderItems(orderItems, order, productPriceMap);
 
-        if(order.status !== OrderStatus.PaymentPending) {
+        if (order.status !== OrderStatus.PaymentPending) {
             const areItemsEqual = await verifyIfItemsAreEqual(orderItems, order.id, trx);
-            if(!areItemsEqual) throw new NonPendingOrderItemUpdateError('Order items cannot be changed after order is processed');
+            if (!areItemsEqual) throw new NonPendingOrderItemUpdateError('Order items cannot be changed after order is processed');
         }
 
         if (!order.id) {
@@ -70,9 +70,10 @@ export async function upsertOrder(
         const existingItemMap = new Map(existingItems.map(item => [item.product_id, item]));
 
         const upsertItems = newOrderItems.map(item => {
+            const timestamp = new Date().toISOString();
             const existingItem = existingItemMap.get(item.product_id);
-            return existingItem ? { ...item, ...existingItem, updated_at: new Date() }
-                : { ...item, created_at: new Date(), updated_at: new Date() };
+            return existingItem ? { ...item, ...existingItem, updated_at: timestamp }
+                : { ...item, created_at: timestamp, updated_at: timestamp };
         });
 
         await OrderItem.query(trx).delete().where('order_id', order.id);
