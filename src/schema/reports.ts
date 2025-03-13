@@ -16,6 +16,6 @@ export const topProductsSchema = z.object({
         .string()
         .transform(value => value.toLowerCase() === "true")
         .pipe(z.boolean())
-})
+}).merge(datesSchema)
 
 export type TopProductsSchema = z.infer<typeof topProductsSchema>
