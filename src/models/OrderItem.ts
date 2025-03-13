@@ -24,9 +24,11 @@ class OrderItem extends Model {
   quantity!: number;
   tax: number = 0;
   discount: number = 0;
+  shipping: number = 0;
   paid!: number;
   created_at?: Date;
   updated_at?: Date;
+
 
   constructor(data?: Partial<OrderItemAttributes>) {
     super();
