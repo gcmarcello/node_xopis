@@ -11,8 +11,8 @@ export type OrderItemAttributes = {
   shipping?: number;
   discount?: number;
   paid?: number;
-  created_at?: Date;
-  updated_at?: Date;
+  created_at?: string;
+  updated_at?: string;
 }
 
 class OrderItem extends Model {
@@ -26,8 +26,8 @@ class OrderItem extends Model {
   discount: number = 0;
   shipping: number = 0;
   paid!: number;
-  created_at?: Date;
-  updated_at?: Date;
+  created_at?: string;
+  updated_at?: string;
 
 
   constructor(data?: Partial<OrderItemAttributes>) {

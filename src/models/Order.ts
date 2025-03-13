@@ -12,8 +12,8 @@ export interface OrderAttributes {
   total_shipping: number;
   total_discount: number;
   status?: OrderStatus;
-  created_at?: Date;
-  updated_at?: Date;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export enum OrderStatus {
@@ -38,8 +38,8 @@ export class Order extends Model {
   total_discount!: number;
   status!: OrderStatus;
   items?: OrderItem[];
-  created_at?: Date;
-  updated_at?: Date;
+  created_at?: string;
+  updated_at?: string;
 
   constructor(data?: Partial<OrderAttributes>) {
       super();
