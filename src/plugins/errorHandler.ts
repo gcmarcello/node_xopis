@@ -1,5 +1,6 @@
 import { FastifyError, FastifyReply, FastifyRequest } from "fastify";
 import { hasZodFastifySchemaValidationErrors, isResponseSerializationError } from "fastify-type-provider-zod";
+import Objection from "objection";
 import ApplicationError, { ErrorCodes } from "src/errors/_applicationError";
 
 export const errorHandler = (
@@ -19,7 +20,7 @@ export const errorHandler = (
     }
 
     if (isResponseSerializationError(error)) {
-        return reply.code(500).send(new ApplicationError(ErrorCodes.VALIDATION_FAILED, error.message, error.validation));
+        return reply.code(400).send(new ApplicationError(ErrorCodes.VALIDATION_FAILED, error.message, error.validation));
     }
 
     if (error instanceof ApplicationError) {
@@ -29,6 +30,20 @@ export const errorHandler = (
                 message: error.message,
             });
         }
+        if(error.code === ErrorCodes.NOT_FOUND) {
+            return reply.code(400).send({
+                error: "Not Found",
+                message: error.message,
+            });
+        }
+    }
+
+    // @TODO: Temporary fix for Objection errors not treated by Zod validation
+    if(error instanceof Objection.NotFoundError || error instanceof Objection.ValidationError) {
+        return reply.code(400).send({
+            error: "Not Found",
+            message: error.message
+        });
     }
 
     return reply.status(500).send({

@@ -1,25 +1,27 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { listSalesByDayAndProduct } from "src/services/reports.service";
+import { listSalesByDayAndProduct } from "../../../services/reports.service";
 
 type Request = FastifyRequest<{
-    Body: {
+    Querystring: {
         start_date: string;
         end_date: string;
-        product_id?: string;
+        product_id?: number;
     }
 }>;
 
-export default async ({{ body: { start_date,
+export default async ({ query: { start_date,
     end_date,
     product_id } }: Request,
-    reply: FastifyReply}) => {
+    reply: FastifyReply
+) => {
     try {
-        return listSalesByDayAndProduct({
+        const report = await listSalesByDayAndProduct({
             start_date,
             end_date,
-            product_id
+            product_id: Number(product_id)
         })
+        return reply.send(report);
     } catch (error) {
-        
+        return reply.send(error);
     }
 }

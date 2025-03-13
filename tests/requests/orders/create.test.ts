@@ -92,7 +92,7 @@ describe('CREATE action', () => {
         it('returns a bad request response', async () => {
             const response = await makeRequest(input);
 
-            await assertBadRequest(response, /must have required property 'customer_id'/);
+            await assertBadRequest(response, /Validation failed/);
         });
     })
 

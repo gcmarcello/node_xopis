@@ -20,35 +20,22 @@ export default async (
     { body: { customer_id, items, id, status } }: Request,
     reply: FastifyReply
 ) => {
-    try {
-        const orderItems = items ?? []
-        const products = await findProductsFromOrderItems(orderItems)
-        const productPriceMap = new Map(products.map(product => [product.id, product.price]));
-        const { total_paid, total_discount, total_shipping, total_tax } = calculateOrderTotals(orderItems, productPriceMap);
+    const orderItems = items ?? []
+    const products = await findProductsFromOrderItems(orderItems)
+    const productPriceMap = new Map(products.map(product => [product.id, product.price]));
+    const { total_paid, total_discount, total_shipping, total_tax } = calculateOrderTotals(orderItems, productPriceMap);
 
-        const order = await upsertOrder({
-            id,
-            customer_id,
-            total_discount,
-            total_paid,
-            total_shipping,
-            total_tax,
-            status
-        }, productPriceMap, orderItems);
+    const order = await upsertOrder({
+        id,
+        customer_id,
+        total_discount,
+        total_paid,
+        total_shipping,
+        total_tax,
+        status
+    }, productPriceMap, orderItems);
 
-        return reply.code(201).send(order);
-    } catch (error) {
-        if (error instanceof InvalidAmountError) {
-            return reply.code(400).send(error);
-        }
-        if (error instanceof NonPendingOrderItemUpdateError) {
-            return reply.code(400).send({ message: error.message });
-        }
-        if (error instanceof NotFoundError) {
-            return reply.code(400).send({ message: error.message });
-        }
-        return reply.send(error);
-    };
+    return reply.code(201).send(order);
 }
 
 

@@ -1,6 +1,7 @@
 export enum ErrorCodes {
     BAD_REQUEST = "BAD_REQUEST",
     VALIDATION_FAILED = "VALIDATION_FAILED",
+    NOT_FOUND = "NOT_FOUND",
   }
   
   export default class ApplicationError extends Error {
