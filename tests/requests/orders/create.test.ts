@@ -419,6 +419,30 @@ describe('CREATE action', () => {
         })
     })
 
+    describe('when updating an non-existing order', () => {
+        const input: Partial<Order> = {
+            "id": 100,
+            "customer_id": 1,
+            "items": [
+                item1,
+                item2
+            ]
+        }
+        it('does not create a new order record', async () => {
+            await assertCount(input, { changedBy: 0 });
+        });
+
+        it('does not create any orderItem record', async () => {
+            await assertCountOrderItems(input, { changedBy: 0 });
+        });
+
+        it('returns a bad request response', async () => {
+            const response = await makeRequest(input);
+
+            await assertBadRequest(response, /root model \(id=100\) does not exist\. If you want to insert it with an id, use the insertMissing option/);
+        });
+    })
+
     const makeRequest = async (input: Partial<Order>) =>
         server.inject({
             method: 'POST',

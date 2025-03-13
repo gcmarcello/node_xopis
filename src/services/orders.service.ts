@@ -45,8 +45,7 @@ export async function upsertOrder(
                 total_shipping,
                 total_tax,
                 status: status ?? OrderStatus.PaymentPending
-            },
-            { relate: true, insertMissing: true }
+            }
         );
 
         const newOrderItems = generateOrderItems(orderItems, order, productPriceMap);
