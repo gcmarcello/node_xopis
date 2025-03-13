@@ -1,12 +1,9 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { listSalesByDayAndProduct } from "../../../services/reports.service";
+import { SalesReportSchema } from "src/schema/reports";
 
 type Request = FastifyRequest<{
-    Querystring: {
-        start_date: string;
-        end_date: string;
-        product_id?: number;
-    }
+    Querystring: SalesReportSchema
 }>;
 
 export default async ({ query: { start_date,
