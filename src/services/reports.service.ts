@@ -1,21 +1,25 @@
 import { Order, OrderItem, Product } from "../models";
 
-export async function listSalesByDayAndProduct({ start_date, end_date, product_id }: { start_date: Date, end_date: Date, product_id?: number }) {
+export async function fetchItemsByDayAndProduct({ start_date, end_date, product_id }: { start_date: Date, end_date: Date, product_id?: number }) {
     const isoStartDate = start_date.toISOString()
     const isoEndDate = end_date.toISOString()
 
     const baseQuery = Order.query()
-    .select('id')
-    .whereBetween('created_at', [isoStartDate, isoEndDate])
-    .where('status', 'approved');
+        .select('id')
+        .whereBetween('created_at', [isoStartDate, isoEndDate])
+        .where('status', 'approved');
 
     const itemsSold = product_id
-    ? await Order.relatedQuery('items')
-          .for(baseQuery)
-          .where('product_id', product_id)
-    : await Order.relatedQuery('items')
-          .for(baseQuery);
+        ? await Order.relatedQuery('items')
+            .for(baseQuery)
+            .where('product_id', product_id)
+        : await Order.relatedQuery('items')
+            .for(baseQuery);
 
+    return itemsSold
+}
+
+export async function reportSalesByDayAndProduct(itemsSold: OrderItem[]) {
     const uniqueProducts = new Set(itemsSold.map(item => item.product_id))
 
     const products = await Product.query().findByIds([...uniqueProducts])
