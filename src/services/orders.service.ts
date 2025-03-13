@@ -29,29 +29,54 @@ export function calculateOrderTotals(orderItems: OrderItemAttributes[], productP
     return { total_paid, total_discount, total_shipping, total_tax };
 }
 
-export async function createOrder(
-    { customer_id, total_discount, total_paid, total_shipping, total_tax, status }: OrderAttributes,
+export async function upsertOrder(
+    { customer_id, total_discount, total_paid, total_shipping, total_tax, status, id }: OrderAttributes,
     productPriceMap: Map<number, number>,
-    orderItems: OrderItemAttributes[],
+    orderItems: OrderItemAttributes[]
 ) {
+    const returningRows = ['discount', 'id', 'order_id', 'paid', 'product_id', 'quantity', 'shipping', 'tax'] as any[]
     return await Order.transaction(async (trx) => {
-        const order = await Order.query(trx).insert({
-            customer_id,
-            total_paid,
-            total_discount,
-            total_shipping,
-            total_tax,
-            status: status ?? OrderStatus.PaymentPending
+        const order = await Order.query(trx).upsertGraph(
+            {
+                id,
+                customer_id,
+                total_paid,
+                total_discount,
+                total_shipping,
+                total_tax,
+                status: status ?? OrderStatus.PaymentPending
+            },
+            { relate: true, insertMissing: true }
+        );
+
+        const newOrderItems = generateOrderItems(orderItems, order, productPriceMap);
+
+        if (!order.id) {
+            const items = newOrderItems.length
+                ? await OrderItem.knex()
+                    .batchInsert("orders_items", newOrderItems)
+                    .transacting(trx)
+                    .returning(returningRows)
+                : [];
+            return { ...order, items };
+        }
+
+        const existingItems = await OrderItem.query(trx).where('order_id', order.id);
+        const existingItemMap = new Map(existingItems.map(item => [item.product_id, item]));
+
+        const upsertItems = newOrderItems.map(item => {
+            const existingItem = existingItemMap.get(item.product_id);
+            return existingItem ? { ...item, ...existingItem, updated_at: new Date() }
+                : { ...item, created_at: new Date(), updated_at: new Date() };
         });
 
-        const orderItemsData = generateOrderItems(orderItems, order, productPriceMap);
+        await OrderItem.query(trx).delete().where('order_id', order.id);
 
-        const items = orderItemsData.length ? await OrderItem.knex()
-            .batchInsert("orders_items", orderItemsData, 100)
+        const items = await OrderItem.knex()
+            .batchInsert("orders_items", upsertItems)
             .transacting(trx)
-            // as any needed due to a bug in objection types
-            .returning(['discount', 'id', 'order_id', 'paid', 'product_id', 'quantity', 'shipping', 'tax'] as any[]) : [];
+            .returning(returningRows);
 
-        return { ...order, items }
-    })
+        return { ...order, items };
+    });
 }

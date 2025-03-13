@@ -4,7 +4,6 @@ import Product from './Product';
 
 export type OrderItemAttributes = {
   id?: number;
-  status: OrderStatus;
   order_id: number;
   product_id: number;
   quantity: number;
@@ -20,7 +19,6 @@ class OrderItem extends Model {
   static tableName = 'orders_items';
 
   id?: number;
-  status!: OrderStatus;
   order_id!: number;
   product_id!: number;
   quantity!: number;

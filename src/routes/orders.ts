@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import orderCreate from "../actions/orders/create";
+import orderUpsert from "../actions/orders/upsert";
 
 export default async function orderRoutes(server: FastifyInstance) {
-    server.post('/', orderCreate);
+    server.post('/', orderUpsert);
 }

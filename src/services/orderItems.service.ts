@@ -1,5 +1,5 @@
 import { Order } from "src/models";
-import { OrderItemAttributes } from "src/models/OrderItem";
+import OrderItem, { OrderItemAttributes } from "../models/OrderItem";
 
 export function generateOrderItems(items: OrderItemAttributes[], order: Order, productPriceMap: Map<number, number>) {
     return items.map(item => {
@@ -10,7 +10,7 @@ export function generateOrderItems(items: OrderItemAttributes[], order: Order, p
         const itemTax = 0;
         const itemShipping = 0;
 
-        return {
+        return new OrderItem({
             order_id: order.id,
             product_id: item.product_id,
             quantity: item.quantity,
@@ -18,6 +18,6 @@ export function generateOrderItems(items: OrderItemAttributes[], order: Order, p
             paid: itemPaid,
             tax: itemTax,
             shipping: itemShipping,
-        }
+        })
     });
 }
