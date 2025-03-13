@@ -6,7 +6,7 @@ import { seedRandomOrders } from 'tests/seeds/order';
 import { error } from 'console';
 
 describe('SALES REPORT action', () => {
-    beforeEach(async () =>
+    beforeAll(async () =>
         await Product
             .knex().batchInsert('products', products)
     )
