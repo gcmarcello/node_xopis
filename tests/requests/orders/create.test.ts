@@ -423,6 +423,7 @@ describe('CREATE action', () => {
         const input: Partial<Order> = {
             "id": 100,
             "customer_id": 1,
+            "status": OrderStatus.Delivered,
             "items": [
                 item1,
                 item2
