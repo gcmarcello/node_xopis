@@ -3,8 +3,9 @@ import { InvalidAmountError } from "../errors/invalidAmount";
 import Order, { OrderAttributes, OrderStatus } from "../models/Order";
 import OrderItem, { OrderItemAttributes } from "../models/OrderItem";
 import { generateOrderItems, verifyIfItemsAreEqual } from "./orderItems.service";
+import { UpsertOrderItemSchema } from "src/schema/orderItems.js";
 
-export function calculateOrderTotals(orderItems: OrderItemAttributes[], productPriceMap: Map<number, number>) {
+export function calculateOrderTotals(orderItems: UpsertOrderItemSchema[], productPriceMap: Map<number, number>) {
     let total_paid = 0;
     let total_discount = 0;
     let total_shipping = 0;
