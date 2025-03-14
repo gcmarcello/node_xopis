@@ -273,6 +273,32 @@ describe('UPDATE action', () => {
         });
     })
 
+    describe('when removing all items in a processed order', () => {
+        const input: Partial<Order> = {
+            "customer_id": 1,
+            "items": [
+                item1,
+                item2
+            ]
+        }
+        it('does not create a new order record', async () => {
+            await makeRequest(input);
+            await assertCountOrderItems({ ...input, id: 1, status: OrderStatus.Approved, items: [] }, { changedBy: 0 });
+        });
+
+        it('does not create any orderItem record', async () => {
+            await makeRequest(input);
+            await assertCountOrderItems({ ...input, id: 1, status: OrderStatus.Approved, items: [] }, { changedBy: 0 });
+        });
+
+        it('returns a bad request response', async () => {
+            await makeRequest(input);
+            await makeRequest({ ...input, id: 1, status: OrderStatus.Approved });
+            const response = await makeRequest({ ...input, status: OrderStatus.Approved, id: 1, items: [] });
+            await assertBadRequest(response, /Order items cannot be changed after order is processed/);
+        });
+    })
+
     const makeRequest = async (input: Partial<Order>) =>
         server.inject({
             method: 'POST',
