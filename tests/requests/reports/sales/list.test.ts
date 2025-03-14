@@ -27,7 +27,7 @@ describe('SALES REPORT action', () => {
 
 
             const expectedItems = filteredOrders.flatMap(order => order.items).map(item => {
-                const product = products.find((product, index) => index + 1 === item?.product_id)
+                const product = products.find((product) => product.id === item?.product_id)
                 if (!product) return null
                 return {
                     product_id: item?.product_id,

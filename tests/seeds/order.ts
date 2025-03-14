@@ -5,19 +5,17 @@ import { faker } from '@faker-js/faker'
 import { OrderItemAttributes } from "src/models/OrderItem";
 
 export function seedRandomOrders(numberOfOrders: number): OrderAttributes[] {
-    const productsMap = new Map<number, number>(products.map((product, index) => [index + 1, product.price]));
     const orders: OrderAttributes[] = [];
 
     for (let i = 0; i < numberOfOrders; i++) {
         const orderItems: OrderItemAttributes[] = [];
         const numberOfProducts = Math.floor(Math.random() * 5) + 1;
 
-        const availableProductIds = Array.from(productsMap.keys());
         for (let j = 0; j < numberOfProducts; j++) {
-            const randomIndex = Math.floor(Math.random() * availableProductIds.length);
-            const productId = availableProductIds[randomIndex];
+            const randomIndex = Math.floor(Math.random() * products.length);
+            const productId = products[randomIndex].id;
             const quantity = Math.floor(Math.random() * 5) + 1;
-            const productCost = productsMap.get(productId) || 0;
+            const productCost = products[randomIndex].price || 0;
             const discount = Math.floor(Math.random() * productCost);
 
             orderItems.push({
@@ -29,11 +27,10 @@ export function seedRandomOrders(numberOfOrders: number): OrderAttributes[] {
                 shipping: 0,
             });
 
-            availableProductIds.splice(randomIndex, 1);
         }
 
         const totalAmount = orderItems.reduce((sum, item) => {
-            return sum + (productsMap.get(item.product_id) || 0) * item.quantity;
+            return sum + (products.find(product => product.id === item.product_id)?.price || 0) * item.quantity;
         }, 0);
         const total_discount = Math.floor(Math.random() * totalAmount);
         const total_paid = totalAmount - total_discount;
