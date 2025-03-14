@@ -4,15 +4,15 @@ import Product from './Product';
 
 export type OrderItemAttributes = {
   id?: number;
-  order_id: number;
+  order_id?: number;
   product_id: number;
   quantity: number;
-  tax: number;
-  shipping: number;
-  discount: number;
-  paid: number;
-  created_at?: Date;
-  updated_at?: Date;
+  tax?: number;
+  shipping?: number;
+  discount?: number;
+  paid?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 class OrderItem extends Model {
@@ -26,8 +26,8 @@ class OrderItem extends Model {
   discount: number = 0;
   shipping: number = 0;
   paid!: number;
-  created_at?: Date;
-  updated_at?: Date;
+  created_at?: string;
+  updated_at?: string;
 
 
   constructor(data?: Partial<OrderItemAttributes>) {

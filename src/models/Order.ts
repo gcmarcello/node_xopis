@@ -1,6 +1,6 @@
 import { Model } from 'objection';
 import User from './User';
-import OrderItem from './OrderItem';
+import OrderItem, { OrderItemAttributes } from './OrderItem';
 import Product from './Product';
 import Payment from './Payment';
 
@@ -10,10 +10,11 @@ export interface OrderAttributes {
   total_paid: number;
   total_tax: number;
   total_shipping: number;
+  items?: OrderItemAttributes[];
   total_discount: number;
-  status: OrderStatus;
-  created_at?: Date;
-  updated_at?: Date;
+  status?: OrderStatus;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export enum OrderStatus {
@@ -38,8 +39,8 @@ export class Order extends Model {
   total_discount!: number;
   status!: OrderStatus;
   items?: OrderItem[];
-  created_at?: Date;
-  updated_at?: Date;
+  created_at?: string;
+  updated_at?: string;
 
   constructor(data?: Partial<OrderAttributes>) {
       super();

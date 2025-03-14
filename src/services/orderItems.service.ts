@@ -27,6 +27,8 @@ export function generateOrderItems(items: OrderItemAttributes[], order: Order, p
 export async function verifyIfItemsAreEqual(orderItems: OrderItemAttributes[], order_id: number, trx?: Objection.Transaction) {
     const existingItems = await OrderItem.query(trx).where('order_id', order_id).select(['product_id', 'quantity', 'discount', 'tax', 'shipping']);
 
+    if(existingItems.length !== orderItems.length) return false;
+
     for (const item of orderItems) {
         const existingItem = existingItems.find(i => i.product_id === item.product_id);
         if (!existingItem) return false;
