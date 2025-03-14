@@ -26,6 +26,7 @@ describe('CREATE action', () => {
     beforeEach(async () => {
         await createBeachBallProduct();
         await createFishingRodProduct();
+        await createConsoleProduct();
     })
 
 
@@ -142,41 +143,14 @@ describe('CREATE action', () => {
 
 
 
-        it('creates a new record', async () => {
-            await assertCount(input, { changedBy: 1 });
+        it('does not create a new record', async () => {
+            await assertCount(input, { changedBy: 0 });
         });
 
-        it('is successful', async () => {
+        it('returns a bad request response', async () => {
             const response = await makeRequest(input);
-            expect(response.statusCode).toBe(201);
-        });
 
-        it('returns the created order with 0 paid value', async () => {
-            const response = await makeRequest(input);
-            const jsonResponse = response.json<Order>();
-            expect(jsonResponse).toEqual(
-                expect.objectContaining({
-                    "customer_id": 1,
-                    "id": 1,
-                    "total_paid": 0,
-                    "total_tax": 0,
-                    "total_shipping": 0,
-                    "total_discount": 200,
-                    "status": "payment_pending",
-                    "items": [
-                        {
-                            "id": 1,
-                            "order_id": 1,
-                            "product_id": 2,
-                            "quantity": 1,
-                            "tax": 0,
-                            "shipping": 0,
-                            "discount": 200,
-                            "paid": 0
-                        }
-                    ]
-                })
-            );
+            await assertBadRequest(response, /Discount amount cannot be greater than total cost for product/);
         });
     })
 
@@ -266,12 +240,25 @@ describe('CREATE action', () => {
     const countRecords = async () =>
         Order.query().resultSize();
 
+    const countOrderItems = async (orderId: number) =>
+        OrderItem.query().where('order_id', orderId).resultSize();
+
     const assertCount = async (input: Partial<Order>, { changedBy }: { changedBy: number }) => {
         const initialCount = await countRecords();
 
         await makeRequest(input);
 
         const finalCount = await countRecords();
+
+        expect(finalCount).toBe(initialCount + changedBy);
+    };
+
+    const assertCountOrderItems = async (input: Partial<Order>, { changedBy }: { changedBy: number }) => {
+        if (!input.id) throw new Error('Order id is required');
+        const initialCount = await countOrderItems(input.id);
+
+        const req = await makeRequest(input);
+        const finalCount = await countOrderItems(input.id);
 
         expect(finalCount).toBe(initialCount + changedBy);
     };
@@ -299,6 +286,16 @@ describe('CREATE action', () => {
                 sku: 'FSHRD',
                 description: 'Fun for the whole family',
                 price: 50,
+                stock: 100,
+            });
+
+    const createConsoleProduct = async () =>
+        await Product.query()
+            .insert({
+                name: 'Console',
+                sku: 'CONSL',
+                description: 'Fun for the whole family',
+                price: 1000,
                 stock: 100,
             });
 });

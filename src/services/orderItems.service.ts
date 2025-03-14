@@ -1,5 +1,7 @@
 import { Order } from "src/models";
-import { OrderItemAttributes } from "src/models/OrderItem";
+import OrderItem, { OrderItemAttributes } from "../models/OrderItem";
+import { isDeepStrictEqual } from "node:util";
+import Objection from "objection";
 
 export function generateOrderItems(items: OrderItemAttributes[], order: Order, productPriceMap: Map<number, number>) {
     return items.map(item => {
@@ -10,7 +12,7 @@ export function generateOrderItems(items: OrderItemAttributes[], order: Order, p
         const itemTax = 0;
         const itemShipping = 0;
 
-        return {
+        return new OrderItem({
             order_id: order.id,
             product_id: item.product_id,
             quantity: item.quantity,
@@ -18,6 +20,32 @@ export function generateOrderItems(items: OrderItemAttributes[], order: Order, p
             paid: itemPaid,
             tax: itemTax,
             shipping: itemShipping,
-        }
+        })
     });
+}
+
+export async function verifyIfItemsAreEqual(orderItems: OrderItemAttributes[], order_id: number, trx?: Objection.Transaction) {
+    const existingItems = await OrderItem.query(trx).where('order_id', order_id).select(['product_id', 'quantity', 'discount', 'tax', 'shipping']);
+
+    for (const item of orderItems) {
+        const existingItem = existingItems.find(i => i.product_id === item.product_id);
+        if (!existingItem) return false;
+        const existingItemDetails = {
+            quantity: existingItem.quantity,
+            product_id: existingItem.product_id,
+            discount: existingItem.discount,
+            tax: existingItem.tax,
+            shipping: existingItem.shipping
+        }
+        const newItem = {
+            quantity: item.quantity,
+            product_id: item.product_id,
+            discount: item.discount ?? 0,
+            tax: item.tax ?? 0,
+            shipping: item.shipping ?? 0
+        }
+        if(!isDeepStrictEqual(existingItemDetails, newItem)) return false;
+    }
+
+    return true;
 }
